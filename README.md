@@ -64,25 +64,3 @@ npm run dev
 
 Buka [http://localhost:3000](http://localhost:3000)
 
-## Deploy ke Vercel
-
-1. Push repo ke GitHub
-2. [vercel.com/new](https://vercel.com/new) → Import repository
-3. Tambahkan environment variables yang sama dengan `.env.local`
-4. Deploy
-5. Di Supabase → **Authentication** → **URL Configuration**, tambahkan URL Vercel ke **Redirect URLs**
-
-## Struktur project
-
-```
-app/
-  (auth)/login, register
-  (dashboard)/dashboard, board/[id]
-components/   UI, layout, tasks, motion
-lib/          supabase, utils, toast
-supabase/     SQL migrations
-```
-
-## Lisensi
-
-MIT — bebas dipakai untuk portfolio dan pembelajaran.
