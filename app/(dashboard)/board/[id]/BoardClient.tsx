@@ -15,31 +15,18 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import {
-  AlertCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Circle,
-  Inbox,
-  ListTodo,
-  Plus,
-  Search,
-  X,
-} from 'lucide-react'
+import { AlertCircle, CheckCircle2, Circle, Inbox, ListTodo, Plus, Search, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { getBoardCover } from '@/lib/constants/board-covers'
 import { isDueTomorrow, isOverdue } from '@/lib/utils/dates'
-import { AnimatedBackground } from '@/components/ui/animated-background'
-import { AppLogo } from '@/components/layout/AppLogo'
-import { UserMenu } from '@/components/layout/UserMenu'
+import { AppShell } from '@/components/layout/AppShell'
 import { TaskCard } from '@/components/tasks/TaskCard'
 import { TaskFormModal, TaskFormValues } from '@/components/tasks/TaskFormModal'
-import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { StatPill } from '@/components/ui/stat-pill'
 import { notify } from '@/lib/toast'
 import { cn } from '@/lib/utils/cn'
-import { Board, Column, Priority, Task, UserProfile } from '@/types'
+import { Board, Column, Task, UserProfile } from '@/types'
 
 type ColumnWithTasks = Column & { tasks: Task[] }
 
@@ -47,9 +34,29 @@ function filterTasksByQuery(tasks: Task[], query: string): Task[] {
   const q = query.trim().toLowerCase()
   if (!q) return tasks
   return tasks.filter(
-    t =>
-      t.title.toLowerCase().includes(q) ||
-      (t.description?.toLowerCase().includes(q) ?? false),
+    task =>
+      task.title.toLowerCase().includes(q) ||
+      (task.description?.toLowerCase().includes(q) ?? false),
+  )
+}
+
+function EmptyColumn({ isFiltering, onAddClick }: { isFiltering: boolean; onAddClick: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.025] px-3 py-10 text-center"
+    >
+      <div className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.04]">
+        <Inbox size={22} className="text-zinc-600" />
+      </div>
+      <p className="text-xs font-medium text-zinc-500">{isFiltering ? 'No matching tasks' : 'This column is clear'}</p>
+      {!isFiltering && (
+        <button type="button" onClick={onAddClick} className="mt-2 text-xs font-medium text-teal-400 hover:text-teal-300">
+          Add task
+        </button>
+      )}
+    </motion.div>
   )
 }
 
@@ -71,41 +78,49 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
   const visibleTasks = filterTasksByQuery(tasks, searchQuery)
   const isFiltering = searchQuery.trim().length > 0
-  const highCount = tasks.filter(t => t.priority === 'high').length
+  const highCount = tasks.filter(task => task.priority === 'high').length
 
   return (
     <motion.div
       layout
       ref={setNodeRef}
       className={cn(
-        'flex-shrink-0 w-[min(calc(100vw-1.5rem),20rem)] sm:w-[18rem] flex flex-col max-h-[calc(100dvh-11rem)] sm:max-h-[calc(100vh-12rem)] rounded-2xl border backdrop-blur-xl transition-all duration-300',
+        'flex max-h-[calc(100dvh-15rem)] w-[min(calc(100vw-1.5rem),21rem)] flex-shrink-0 flex-col rounded-3xl border backdrop-blur-xl transition-all duration-300 sm:max-h-[calc(100vh-15rem)] sm:w-[19.5rem]',
         isOver
-          ? 'border-violet-500/50 bg-violet-500/5 shadow-lg shadow-violet-500/10 scale-[1.01]'
-          : 'border-white/[0.08] bg-white/[0.03]',
+          ? 'scale-[1.01] border-teal-400/45 bg-teal-400/5 shadow-lg shadow-teal-500/10'
+          : 'border-white/[0.08] bg-white/[0.035]',
       )}
     >
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/[0.06] shrink-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <span
-            className="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-white/10"
-            style={{ backgroundColor: column.color }}
-          />
-          <span className="text-sm font-semibold text-zinc-100 truncate">{column.title}</span>
-          <span className="text-xs font-medium text-zinc-500 bg-white/5 border border-white/[0.06] px-2 py-0.5 rounded-full tabular-nums">
-            {tasks.length}
-          </span>
+      <div className="shrink-0 border-b border-white/[0.06] px-4 py-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/10" style={{ backgroundColor: column.color }} />
+            <span className="truncate text-sm font-semibold text-zinc-100">{column.title}</span>
+            <span className="rounded-full border border-white/[0.06] bg-white/5 px-2 py-0.5 text-xs font-medium tabular-nums text-zinc-500">
+              {tasks.length}
+            </span>
+          </div>
+          <motion.button
+            type="button"
+            whileHover={{ width: 92 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={onAddClick}
+            className="group inline-flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[0.04] text-zinc-400 transition hover:border-teal-400/30 hover:text-teal-300"
+            aria-label={`Add task to ${column.title}`}
+          >
+            <Plus size={16} className="shrink-0" />
+            <span className="ml-1 hidden whitespace-nowrap text-xs font-medium group-hover:inline">Add</span>
+          </motion.button>
         </div>
-        <Button variant="ghost" size="sm" onClick={onAddClick} className="!h-8 !w-8 !p-0" icon={<Plus size={16} />} />
+        {highCount > 0 && column.title === 'To Do' && (
+          <p className="mt-2 flex items-center gap-1 text-[10px] text-amber-300/90">
+            <AlertCircle size={10} /> {highCount} high-priority {highCount === 1 ? 'task' : 'tasks'}
+          </p>
+        )}
       </div>
 
-      {highCount > 0 && column.title === 'To Do' && (
-        <p className="px-3 pt-2 text-[10px] text-amber-400/90 flex items-center gap-1">
-          <AlertCircle size={10} /> {highCount} prioritas tinggi
-        </p>
-      )}
-
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-[100px] custom-scrollbar">
-        <SortableContext items={visibleTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+      <div className="custom-scrollbar min-h-[100px] flex-1 space-y-2.5 overflow-y-auto p-3">
+        <SortableContext items={visibleTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
           <AnimatePresence mode="popLayout">
             {visibleTasks.map(task => (
               <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
@@ -113,27 +128,7 @@ function KanbanColumn({
           </AnimatePresence>
         </SortableContext>
 
-        {visibleTasks.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-10 px-3 text-center rounded-xl border border-dashed border-white/[0.08] bg-white/[0.02]"
-          >
-            <Inbox size={24} className="text-zinc-600 mb-2" />
-            <p className="text-xs text-zinc-500 font-medium">
-              {isFiltering ? 'Tidak ada task yang cocok' : 'Kolom masih kosong'}
-            </p>
-            {!isFiltering && (
-              <button
-                type="button"
-                onClick={onAddClick}
-                className="mt-2 text-xs text-violet-400 hover:text-violet-300 font-medium"
-              >
-                + Tambah task
-              </button>
-            )}
-          </motion.div>
-        )}
+        {visibleTasks.length === 0 && <EmptyColumn isFiltering={isFiltering} onAddClick={onAddClick} />}
       </div>
     </motion.div>
   )
@@ -144,9 +139,10 @@ interface Props {
   initialColumns: ColumnWithTasks[]
   userId: string
   user: UserProfile
+  boards: Board[]
 }
 
-export default function BoardClient({ board, initialColumns, userId, user }: Props) {
+export default function BoardClient({ board, initialColumns, userId, user, boards }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [columns, setColumns] = useState(initialColumns)
@@ -170,24 +166,24 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
   )
 
   const boardStats = useMemo(() => {
-    const all = columns.flatMap(c => c.tasks)
+    const all = columns.flatMap(column => column.tasks)
     return {
       total: all.length,
-      done: columns.find(c => c.title === 'Done')?.tasks.length ?? columns[2]?.tasks.length ?? 0,
-      overdue: all.filter(t => isOverdue(t.due_date)).length,
-      tomorrow: all.filter(t => isDueTomorrow(t.due_date)).length,
-      high: all.filter(t => t.priority === 'high').length,
+      done: columns.find(column => column.title === 'Done')?.tasks.length ?? columns[2]?.tasks.length ?? 0,
+      overdue: all.filter(task => isOverdue(task.due_date)).length,
+      tomorrow: all.filter(task => isDueTomorrow(task.due_date)).length,
+      high: all.filter(task => task.priority === 'high').length,
     }
   }, [columns])
 
   const filteredTotal = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return boardStats.total
-    return columns.reduce((n, col) => n + filterTasksByQuery(col.tasks, q).length, 0)
+    return columns.reduce((count, column) => count + filterTasksByQuery(column.tasks, q).length, 0)
   }, [columns, searchQuery, boardStats.total])
 
   function findColumnByTaskId(taskId: string) {
-    return columns.find(col => col.tasks.some(t => t.id === taskId))
+    return columns.find(column => column.tasks.some(task => task.id === taskId))
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -198,23 +194,23 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
     const { active, over } = event
     if (!over || active.id === over.id) return
     const activeCol = findColumnByTaskId(active.id as string)
-    const overCol = columns.find(c => c.id === over.id) ?? findColumnByTaskId(over.id as string)
+    const overCol = columns.find(column => column.id === over.id) ?? findColumnByTaskId(over.id as string)
     if (!activeCol || !overCol || activeCol.id === overCol.id) return
 
     setColumns(prev => {
-      const task = activeCol.tasks.find(t => t.id === active.id)!
-      return prev.map(col => {
-        if (col.id === activeCol.id) return { ...col, tasks: col.tasks.filter(t => t.id !== active.id) }
-        if (col.id === overCol.id) return { ...col, tasks: [...col.tasks, { ...task, column_id: overCol.id }] }
-        return col
+      const task = activeCol.tasks.find(item => item.id === active.id)!
+      return prev.map(column => {
+        if (column.id === activeCol.id) return { ...column, tasks: column.tasks.filter(item => item.id !== active.id) }
+        if (column.id === overCol.id) return { ...column, tasks: [...column.tasks, { ...task, column_id: overCol.id }] }
+        return column
       })
     })
   }
 
-  async function persistColumnTasks(col: ColumnWithTasks) {
+  async function persistColumnTasks(column: ColumnWithTasks) {
     await Promise.all(
-      col.tasks.map((t, index) =>
-        supabase.from('tasks').update({ position: index, column_id: col.id }).eq('id', t.id),
+      column.tasks.map((task, index) =>
+        supabase.from('tasks').update({ position: index, column_id: column.id }).eq('id', task.id),
       ),
     )
   }
@@ -228,42 +224,41 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
     const activeCol = findColumnByTaskId(activeId)
     if (!activeCol) return
 
-    const overCol = columns.find(c => c.id === over.id) ?? findColumnByTaskId(over.id as string)
+    const overCol = columns.find(column => column.id === over.id) ?? findColumnByTaskId(over.id as string)
     if (!overCol) return
 
-    const activeIndex = activeCol.tasks.findIndex(t => t.id === activeId)
-    let overIndex =
-      over.id === overCol.id ? overCol.tasks.length - 1 : overCol.tasks.findIndex(t => t.id === over.id)
+    const activeIndex = activeCol.tasks.findIndex(task => task.id === activeId)
+    let overIndex = over.id === overCol.id ? overCol.tasks.length - 1 : overCol.tasks.findIndex(task => task.id === over.id)
     if (activeIndex === -1) return
     if (overIndex === -1) overIndex = overCol.tasks.length - 1
 
     if (activeCol.id === overCol.id) {
       if (activeIndex === overIndex) return
       const reordered = arrayMove(activeCol.tasks, activeIndex, overIndex)
-      setColumns(prev => prev.map(col => (col.id === activeCol.id ? { ...col, tasks: reordered } : col)))
+      setColumns(prev => prev.map(column => (column.id === activeCol.id ? { ...column, tasks: reordered } : column)))
       const results = await Promise.all(
-        reordered.map((t, i) => supabase.from('tasks').update({ position: i }).eq('id', t.id)),
+        reordered.map((task, index) => supabase.from('tasks').update({ position: index }).eq('id', task.id)),
       )
-      if (results.some(r => r.error)) {
-        notify.error('Gagal mengurutkan task')
+      if (results.some(result => result.error)) {
+        notify.error('Unable to reorder task')
         router.refresh()
       } else {
-        notify.info('Urutan diperbarui', `Posisi task di «${activeCol.title}» disimpan.`)
+        notify.info('Order updated', `Task positions in "${activeCol.title}" were saved.`)
       }
       return
     }
 
-    const destCol = columns.find(c => c.id === overCol.id)
+    const destCol = columns.find(column => column.id === overCol.id)
     if (!destCol) return
 
     const { error } = await supabase.from('tasks').update({ column_id: overCol.id }).eq('id', activeId)
     if (error) {
-      notify.error('Gagal memindahkan task', error.message)
+      notify.error('Unable to move task', error.message)
       router.refresh()
       return
     }
     await persistColumnTasks(destCol)
-    notify.success('Task dipindah', `Ke kolom «${overCol.title}».`)
+    notify.success('Task moved', `Dropped into "${overCol.title}".`)
   }
 
   function openCreate(columnId: string, columnTitle: string) {
@@ -289,14 +284,14 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
         .select()
         .single()
 
-      if (error) notify.error('Gagal menyimpan', error.message)
+      if (error) notify.error('Unable to save task', error.message)
       else if (data) {
-        setColumns(prev => prev.map(col => ({ ...col, tasks: col.tasks.map(t => (t.id === data.id ? data : t)) })))
+        setColumns(prev => prev.map(column => ({ ...column, tasks: column.tasks.map(task => (task.id === data.id ? data : task)) })))
         setTaskModal({ open: false, mode: 'create' })
-        notify.success('Task diperbarui', `«${data.title}» telah disimpan.`)
+        notify.success('Task updated', `"${data.title}" was saved.`)
       }
     } else if (taskModal.columnId) {
-      const col = columns.find(c => c.id === taskModal.columnId)!
+      const column = columns.find(item => item.id === taskModal.columnId)!
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -306,18 +301,18 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
           description: values.description || null,
           priority: values.priority,
           due_date: values.dueDate || null,
-          position: col.tasks.length,
+          position: column.tasks.length,
         })
         .select()
         .single()
 
-      if (error) notify.error('Gagal menambah task', error.message)
+      if (error) notify.error('Unable to add task', error.message)
       else if (data) {
         setColumns(prev =>
-          prev.map(c => (c.id === taskModal.columnId ? { ...c, tasks: [...c.tasks, data] } : c)),
+          prev.map(item => (item.id === taskModal.columnId ? { ...item, tasks: [...item.tasks, data] } : item)),
         )
         setTaskModal({ open: false, mode: 'create' })
-        notify.success('Task ditambahkan', `Di kolom «${taskModal.columnTitle}».`)
+        notify.success('Task added', `Added to "${taskModal.columnTitle}".`)
       }
     }
     setSaving(false)
@@ -327,10 +322,10 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
     if (!deleteTaskId) return
     setDeleting(true)
     const { error } = await supabase.from('tasks').delete().eq('id', deleteTaskId)
-    if (error) notify.error('Gagal menghapus', error.message)
+    if (error) notify.error('Unable to delete task', error.message)
     else {
-      setColumns(prev => prev.map(col => ({ ...col, tasks: col.tasks.filter(t => t.id !== deleteTaskId) })))
-      notify.success('Task dihapus')
+      setColumns(prev => prev.map(column => ({ ...column, tasks: column.tasks.filter(task => task.id !== deleteTaskId) })))
+      notify.success('Task deleted')
     }
     setDeleting(false)
     setDeleteTaskId(null)
@@ -338,109 +333,91 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    notify.info('Kamu telah keluar')
+    notify.info('Signed out')
     router.push('/login')
     router.refresh()
   }
 
   return (
-    <div className="min-h-screen bg-app-gradient flex flex-col relative">
-      <AnimatedBackground />
-
-      <header className="sticky top-0 z-30 shrink-0 border-b border-white/[0.06] bg-[#06060a]/75 backdrop-blur-xl">
-        <div className={cn('h-1 bg-gradient-to-r', cover.gradient)} />
-
-        <div className="px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/dashboard')}
-            icon={<ArrowLeft size={18} />}
-            className="shrink-0"
-            aria-label="Kembali"
-          />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-white truncate">{board.title}</h1>
-            <p className="text-xs text-zinc-500 truncate hidden sm:block">
-              {board.description || 'Drag task antar kolom · Klik kartu untuk edit'}
-            </p>
-          </div>
-          <div className="hidden md:block">
-            <AppLogo href="/dashboard" />
-          </div>
-          <div className="hidden sm:block">
-            <UserMenu user={user} onLogout={handleLogout} compact />
-          </div>
-        </div>
-
-        <div className="px-3 sm:px-6 pb-3 space-y-3">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <StatPill icon={ListTodo} label="Total task" value={boardStats.total} tone="violet" />
-            <StatPill icon={CheckCircle2} label="Selesai" value={boardStats.done} tone="emerald" />
-            <StatPill icon={AlertCircle} label="Terlambat" value={boardStats.overdue} tone="amber" />
-            <StatPill icon={Circle} label="Prioritas tinggi" value={boardStats.high} tone="cyan" />
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <div className="relative flex-1">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari task berdasarkan judul atau deskripsi..."
-                className="w-full h-10 pl-10 pr-10 rounded-xl bg-white/[0.04] border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-500 hover:text-white rounded-lg"
-                >
-                  <X size={14} />
-                </button>
-              )}
+    <AppShell
+      user={user}
+      onLogout={handleLogout}
+      boards={boards}
+      activeBoardId={board.id}
+      header={
+        <div>
+          <div className={cn('h-1 bg-gradient-to-r', cover.gradient)} />
+          <div className="space-y-3 px-3 pb-3 sm:px-6">
+            <div className="flex min-w-0 flex-col gap-1 pt-3">
+              <h1 className="font-display truncate text-xl font-semibold tracking-[-0.02em] text-white sm:text-2xl">{board.title}</h1>
+              <p className="truncate text-xs text-zinc-500 sm:text-sm">
+                {board.description || 'Drag cards between columns and keep the next decision visible.'}
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 shrink-0 px-1">
-              {searchActive
-                ? `${filteredTotal} dari ${boardStats.total} task`
-                : boardStats.tomorrow > 0
-                  ? `${boardStats.tomorrow} deadline besok`
-                  : 'Geser kartu untuk memindahkan'}
-            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <StatPill icon={ListTodo} label="Total tasks" value={boardStats.total} tone="teal" />
+              <StatPill icon={CheckCircle2} label="Done" value={boardStats.done} tone="teal" />
+              <StatPill icon={AlertCircle} label="Overdue" value={boardStats.overdue} tone="amber" />
+              <StatPill icon={Circle} label="High priority" value={boardStats.high} tone="cyan" />
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <div className="relative w-full">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks by title or description"
+                  className="h-10 w-full rounded-xl border border-white/10 bg-white/[0.04] pl-10 pr-10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-teal-400/25"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-zinc-500 hover:text-white"
+                    aria-label="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <p className="shrink-0 px-1 text-xs text-zinc-500">
+                {searchActive
+                  ? `${filteredTotal} of ${boardStats.total} tasks`
+                  : boardStats.tomorrow > 0
+                    ? `${boardStats.tomorrow} due tomorrow`
+                    : 'Drag cards to move work'}
+              </p>
+            </div>
           </div>
         </div>
-      </header>
-
-      <div className="flex-1 overflow-x-auto kanban-scroll relative z-10">
+      }
+    >
+      <div className="kanban-scroll relative z-10 flex-1 overflow-x-auto">
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
-          <div className="flex gap-3 sm:gap-4 p-3 sm:p-6 min-h-full w-max min-w-full pb-24 sm:pb-8">
-            {columns.map(col => (
+          <div className="flex min-h-[calc(100dvh-17rem)] w-max min-w-full gap-3 p-3 pb-24 sm:gap-4 sm:p-6 sm:pb-8">
+            {columns.map(column => (
               <KanbanColumn
-                key={col.id}
-                column={col}
-                tasks={col.tasks}
+                key={column.id}
+                column={column}
+                tasks={column.tasks}
                 searchQuery={searchQuery}
-                onAddClick={() => openCreate(col.id, col.title)}
+                onAddClick={() => openCreate(column.id, column.title)}
                 onEditTask={openEdit}
                 onDeleteTask={id => setDeleteTaskId(id)}
               />
             ))}
           </div>
-          <DragOverlay dropAnimation={{ duration: 200, easing: 'ease' }}>
+          <DragOverlay dropAnimation={{ duration: 220, easing: 'ease' }}>
             {activeTask && (
-              <div className="rounded-xl border border-violet-500/50 bg-[#12121a]/95 backdrop-blur p-4 w-72 shadow-2xl shadow-violet-500/20 rotate-2 cursor-grabbing">
+              <div className="w-72 rotate-2 cursor-grabbing rounded-2xl border border-teal-400/45 bg-[#10131a]/95 p-4 shadow-2xl shadow-teal-500/20 backdrop-blur">
                 <p className="text-sm font-semibold text-white">{activeTask.title}</p>
-                <p className="text-xs text-zinc-500 mt-1">Lepas di kolom tujuan</p>
+                <p className="mt-1 text-xs text-zinc-500">Release in the target column</p>
               </div>
             )}
           </DragOverlay>
         </DndContext>
-      </div>
-
-      <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 border-t border-white/[0.08] bg-[#06060a]/90 backdrop-blur-xl px-4 py-3 flex justify-between items-center">
-        <UserMenu user={user} onLogout={handleLogout} compact />
-        <p className="text-[10px] text-zinc-600">Taskflow · Kanban</p>
       </div>
 
       <TaskFormModal
@@ -455,14 +432,14 @@ export default function BoardClient({ board, initialColumns, userId, user }: Pro
 
       <ConfirmDialog
         open={!!deleteTaskId}
-        title="Hapus task?"
-        description="Task ini akan dihapus permanen dari board."
-        confirmLabel="Hapus"
+        title="Delete task?"
+        description="This task will be permanently removed from the board."
+        confirmLabel="Delete"
         variant="danger"
         loading={deleting}
         onConfirm={confirmDeleteTask}
         onCancel={() => setDeleteTaskId(null)}
       />
-    </div>
+    </AppShell>
   )
 }

@@ -2,6 +2,16 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { toUserProfile } from '@/lib/auth/profile'
 import DashboardClient from './DashboardClient'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'View and manage every TaskFlow Kanban board in your workspace.',
+  openGraph: {
+    title: 'Dashboard - TaskFlow',
+    description: 'Your premium Kanban command center.',
+  },
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()

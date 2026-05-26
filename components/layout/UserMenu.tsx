@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { LogOut } from 'lucide-react'
 import type { UserProfile } from '@/types'
@@ -18,28 +19,42 @@ interface UserMenuProps {
   compact?: boolean
 }
 
-export function UserMenu({ user, onLogout, compact }: UserMenuProps) {
+export function UserAvatar({ user, className }: { user: UserProfile; className?: string }) {
   const initials = getInitials(user.displayName, user.email)
 
+  if (user.avatarUrl) {
+    return (
+      <Image
+        src={user.avatarUrl}
+        alt={user.displayName}
+        width={40}
+        height={40}
+        className={cn('rounded-full object-cover ring-2 ring-teal-400/25', className)}
+      />
+    )
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 text-xs font-bold text-slate-950 ring-2 ring-white/10',
+        className,
+      )}
+    >
+      {initials}
+    </div>
+  )
+}
+
+export function UserMenu({ user, onLogout, compact }: UserMenuProps) {
   return (
     <div className={cn('flex items-center gap-2', compact && 'gap-1.5')}>
-      <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-white/[0.08]">
-        {user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.avatarUrl}
-            alt=""
-            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover ring-2 ring-violet-500/30"
-          />
-        ) : (
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white ring-2 ring-white/10">
-            {initials}
-          </div>
-        )}
+      <div className="flex items-center gap-2.5 border-l border-white/[0.08] pl-2 sm:pl-3">
+        <UserAvatar user={user} />
         {!compact && (
-          <div className="hidden md:block text-left max-w-[150px]">
-            <p className="text-sm font-medium text-zinc-200 truncate">{user.displayName}</p>
-            <p className="text-[11px] text-zinc-500 truncate">{user.email}</p>
+          <div className="hidden max-w-[150px] text-left md:block">
+            <p className="truncate text-sm font-medium text-zinc-200">{user.displayName}</p>
+            <p className="truncate text-[11px] text-zinc-500">{user.email}</p>
           </div>
         )}
       </div>
@@ -48,11 +63,11 @@ export function UserMenu({ user, onLogout, compact }: UserMenuProps) {
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         onClick={onLogout}
-        className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition px-2.5 py-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10"
-        title="Keluar"
+        className="flex items-center gap-1.5 rounded-xl border border-transparent px-2.5 py-2 text-sm text-zinc-400 transition hover:border-white/10 hover:bg-white/5 hover:text-white"
+        title="Sign out"
       >
         <LogOut size={16} />
-        <span className="hidden lg:inline text-xs font-medium">Keluar</span>
+        <span className="hidden text-xs font-medium lg:inline">Sign out</span>
       </motion.button>
     </div>
   )

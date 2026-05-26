@@ -1,66 +1,63 @@
-# Taskflow
+# TaskFlow
 
-Kanban board modern untuk mengelola pekerjaan — dibangun dengan **Next.js 16**, **Supabase**, **Tailwind CSS**, dan **Framer Motion**.
+TaskFlow is a premium, dark-themed Kanban workspace designed for seamless project planning, work prioritization, and moving ideas to execution. Built with performance and aesthetics in mind, it provides a distraction-free environment for focused teams.
 
-![Taskflow](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
-![Supabase](https://img.shields.io/badge/Supabase-Auth%20%2B%20DB-3ECF8E?style=flat-square&logo=supabase)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
+![TaskFlow Hero Preview](public/taskflow-logo.png)
 
-## Fitur
+## Features
 
-- Autentikasi (login / register) dengan Supabase Auth
-- Dashboard multi-board dengan cover gradient
-- Board Kanban: To Do · In Progress · Done
-- Drag & drop antar kolom + reorder dalam kolom
-- Task: prioritas, deadline, deskripsi, edit modal
-- Pencarian task, statistik board, toast informatif
-- UI responsif (mobile → desktop) dengan animasi halus
+- **Row-Level Security (RLS):** Every task and board is securely isolated. You only see what belongs to you, enforced at the database level.
+- **Lightning Fast Interactions:** Built with `@dnd-kit`, the drag-and-drop experience is buttery smooth without dropping a single frame.
+- **Premium UI/UX:** A bespoke design system utilizing dark modes, subtle glassmorphism (`backdrop-blur`), and carefully curated gradients (`Teal & Orange` palette).
+- **Responsive Command Center:** Manage projects flawlessly from desktop or mobile.
 
-## Tech stack
+## Tech Stack
 
-| Layer | Teknologi |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) |
-| Database & Auth | Supabase (PostgreSQL + RLS) |
-| Styling | Tailwind CSS 4 |
-| DnD | @dnd-kit |
-| Animasi | Framer Motion |
-| Notifikasi | Sonner |
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Frontend Library:** [React 19](https://react.dev/) & TypeScript
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+- **Backend & Auth:** [Supabase](https://supabase.com/) (PostgreSQL, Auth, RLS)
+- **Drag & Drop:** [@dnd-kit](https://dndkit.com/)
+- **Icons:** [Lucide React](https://lucide.dev/)
 
-## Mulai cepat
+## Getting Started
 
-### 1. Clone & install
+### Prerequisites
 
-```bash
-git clone https://github.com/YOUR_USERNAME/taskflow.git
-cd taskflow
-npm install
-```
+Ensure you have Node.js installed on your machine. You will also need a Supabase project for the database and authentication.
 
-### 2. Environment
+### Installation
 
-```bash
-cp .env.example .env.local
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/taskflow.git
+   cd taskflow
+   ```
 
-Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari [Supabase Dashboard](https://supabase.com/dashboard) → **Settings** → **API**.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-### 3. Database Supabase
+3. **Configure Environment Variables:**
+   Create a `.env.local` file in the root directory and add your Supabase credentials. Use `.env.example` as a reference:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-Jalankan SQL di **SQL Editor**:
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-- Sudah punya tabel? → `supabase/FIX_PERMISSIONS.sql`
-- Setup baru? → `supabase/FULL_SETUP.sql`
+5. **Open the app:**
+   Visit `http://localhost:3000` in your browser.
 
-Panduan lengkap: [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)
+## Database Setup
 
-**Auth:** matikan **Confirm email** di Authentication → Providers → Email (untuk development).
+TaskFlow requires two main tables in your Supabase project: `boards` and `tasks`. Ensure you have Row-Level Security (RLS) enabled on both tables so users can only access their own data based on `auth.uid()`.
 
-### 4. Dev server
+## License
 
-```bash
-npm run dev
-```
-
-Buka [http://localhost:3000](http://localhost:3000)
-
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

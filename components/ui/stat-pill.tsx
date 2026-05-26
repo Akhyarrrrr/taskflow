@@ -5,7 +5,7 @@ interface StatPillProps {
   icon: LucideIcon
   label: string
   value: string | number
-  tone?: 'default' | 'violet' | 'cyan' | 'amber' | 'emerald'
+  tone?: 'default' | 'violet' | 'cyan' | 'amber' | 'teal'
 }
 
 const tones = {
@@ -13,7 +13,7 @@ const tones = {
   violet: 'bg-violet-500/10 text-violet-300 border-violet-500/20',
   cyan: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20',
   amber: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
-  emerald: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
+  teal: 'bg-teal-500/10 text-teal-300 border-teal-500/20',
 }
 
 export function StatPill({ icon: Icon, label, value, tone = 'default' }: StatPillProps) {

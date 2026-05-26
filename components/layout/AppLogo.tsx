@@ -1,31 +1,37 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { Layers } from 'lucide-react'
+import logo from '@/taskflow-logo.png'
+import { cn } from '@/lib/utils/cn'
 
 interface AppLogoProps {
   href?: string
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
 }
 
-export function AppLogo({ href = '/dashboard' }: AppLogoProps) {
+const sizes = {
+  sm: 'h-8 w-8',
+  md: 'h-10 w-10',
+  lg: 'h-12 w-12',
+}
+
+export function AppLogo({ href = '/dashboard', size = 'md', className }: AppLogoProps) {
   const inner = (
-    <div className="flex items-center gap-2.5 group">
-      <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-500 p-[1px] shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
-        <div className="w-full h-full rounded-[11px] bg-[#0a0a0f] flex items-center justify-center">
-          <Layers size={17} className="text-violet-300" strokeWidth={2.25} />
-        </div>
-      </div>
-      <div className="hidden sm:block">
-        <span className="font-bold text-white tracking-tight text-[15px]">Taskflow</span>
-        <span className="block text-[10px] text-zinc-500 font-medium -mt-0.5">Kanban workspace</span>
-      </div>
-    </div>
+    <Image
+      src={logo}
+      alt="TaskFlow"
+      width={48}
+      height={48}
+      priority
+      className={cn('rounded-xl object-contain shadow-lg shadow-teal-500/10 transition-opacity', sizes[size], className)}
+    />
   )
 
-  if (href) {
-    return (
-      <Link href={href} className="hover:opacity-90 transition-opacity">
-        {inner}
-      </Link>
-    )
-  }
-  return inner
+  if (!href) return inner
+
+  return (
+    <Link href={href} aria-label="TaskFlow home" className="inline-flex items-center hover:opacity-90 transition-opacity">
+      {inner}
+    </Link>
+  )
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google'
 import { Toaster } from '@/components/providers/Toaster'
 import './globals.css'
 
@@ -9,21 +9,38 @@ const jakarta = Plus_Jakarta_Sans({
   display: 'swap',
 })
 
+const mono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Taskflow — Kanban yang elegan untuk tim modern',
+  metadataBase: new URL('https://taskflow.app'),
+  title: {
+    default: 'TaskFlow - Premium Kanban Workspace',
+    template: '%s - TaskFlow',
+  },
   description:
-    'Atur pekerjaan dengan board visual, drag-and-drop, prioritas, dan deadline — dibangun dengan Next.js & Supabase.',
+    'Plan, prioritize, and ship work in a polished Kanban workspace built with Next.js and Supabase.',
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
   openGraph: {
-    title: 'Taskflow',
-    description: 'Kanban board modern untuk produktivitas',
+    title: 'TaskFlow - Premium Kanban Workspace',
+    description: 'A dark-first task management app for focused teams and solo operators.',
     type: 'website',
   },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" suppressHydrationWarning>
-      <body className={`${jakarta.className} antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${jakarta.variable} ${mono.variable} font-sans antialiased`}>
         {children}
         <Toaster />
       </body>

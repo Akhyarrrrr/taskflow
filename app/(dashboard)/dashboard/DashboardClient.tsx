@@ -23,6 +23,25 @@ interface Props {
   userId: string
 }
 
+function EmptyIllustration() {
+  return (
+    <div className="mx-auto mb-7 grid h-28 w-36 grid-cols-3 gap-2 rounded-3xl border border-white/10 bg-white/[0.035] p-3 shadow-2xl shadow-black/30">
+      {['bg-teal-400/25', 'bg-sky-400/20', 'bg-fuchsia-400/20'].map((tone, column) => (
+        <div key={tone} className="space-y-2 rounded-2xl border border-white/8 bg-black/20 p-1.5">
+          {Array.from({ length: column + 1 }).map((_, index) => (
+            <motion.div
+              key={index}
+              className={cn('h-5 rounded-lg', tone)}
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2.5 + index, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function DashboardClient({ boards: initialBoards, user, userId }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -30,7 +49,7 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
   const [showModal, setShowModal] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [coverId, setCoverId] = useState<BoardCoverId>(DEFAULT_COVER_ID)
+
   const [loading, setLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Board | null>(null)
   const [deleting, setDeleting] = useState(false)
@@ -46,7 +65,7 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    notify.info('Kamu telah keluar', 'Sampai jumpa lagi!')
+    notify.info('Signed out', 'Your workspace is ready when you return.')
     router.push('/login')
     router.refresh()
   }
@@ -57,23 +76,22 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
     setLoading(true)
 
     const base = { user_id: userId, title: title.trim(), description: description.trim() || null }
-    let { data, error } = await supabase.from('boards').insert({ ...base, cover_color: coverId }).select().single()
+    let { data, error } = await supabase.from('boards').insert({ ...base, cover_color: 'emerald' as BoardCoverId }).select().single()
 
     if (error?.message?.includes('cover_color')) {
-      const fb = await supabase.from('boards').insert(base).select().single()
-      data = fb.data
-      error = fb.error
+      const fallback = await supabase.from('boards').insert(base).select().single()
+      data = fallback.data
+      error = fallback.error
     }
 
     if (error) {
-      notify.error('Board gagal dibuat', error.message)
+      notify.error('Board was not created', error.message)
     } else if (data) {
       setBoards(prev => [data, ...prev])
       setTitle('')
       setDescription('')
-      setCoverId(DEFAULT_COVER_ID)
       setShowModal(false)
-      notify.success('Board berhasil dibuat', `«${data.title}» siap dengan 3 kolom Kanban.`)
+      notify.success('Board created', `"${data.title}" is ready with three Kanban columns.`)
     }
     setLoading(false)
   }
@@ -83,54 +101,46 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
     setDeleting(true)
     const { error } = await supabase.from('boards').delete().eq('id', deleteTarget.id)
     if (error) {
-      notify.error('Gagal menghapus board', error.message)
+      notify.error('Unable to delete board', error.message)
     } else {
       setBoards(prev => prev.filter(b => b.id !== deleteTarget.id))
-      notify.success('Board dihapus', `«${deleteTarget.title}» dan semua task-nya telah dihapus.`)
+      notify.success('Board deleted', `"${deleteTarget.title}" and its tasks were removed.`)
     }
     setDeleting(false)
     setDeleteTarget(null)
   }
 
   return (
-    <AppShell user={user} onLogout={handleLogout}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    <AppShell user={user} onLogout={handleLogout} boards={boards}>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <Stagger className="space-y-8">
           <StaggerItem>
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
               <div>
-                <p className="text-sm text-violet-400 font-medium mb-1">
-                  Halo, {user.displayName.split(' ')[0]} 👋
+                <p className="mb-2 text-sm font-medium text-teal-400">
+                  Good to see you, {user.displayName.split(' ')[0]}
                 </p>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-                  Workspace kamu
+                <h1 className="font-display text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
+                  Your command center
                 </h1>
-                <p className="text-zinc-500 text-sm sm:text-base mt-2 max-w-lg">
-                  Kelola proyek di board Kanban. Setiap board otomatis punya kolom To Do, In Progress, dan Done.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500 sm:text-base">
+                  Organize projects into polished boards with priorities, deadlines, and drag-and-drop flow.
                 </p>
               </div>
-              <Button
-                icon={<Plus size={16} />}
-                onClick={() => setShowModal(true)}
-                size="lg"
-                className="w-full sm:w-auto shrink-0"
-              >
-                Board baru
-              </Button>
+              <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                <Button icon={<Plus size={16} />} onClick={() => setShowModal(true)} size="lg" className="w-full sm:w-auto">
+                  New board
+                </Button>
+              </motion.div>
             </div>
           </StaggerItem>
 
           <StaggerItem>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <StatPill icon={FolderKanban} label="Total board" value={stats.total} tone="violet" />
-              <StatPill icon={LayoutGrid} label="Kolom aktif" value={stats.columns} tone="cyan" />
-              <StatPill icon={Calendar} label="Board bulan ini" value={stats.thisMonth} tone="amber" />
-              <StatPill
-                icon={Sparkles}
-                label="Status"
-                value={stats.total > 0 ? 'Aktif' : 'Kosong'}
-                tone="emerald"
-              />
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatPill icon={FolderKanban} label="Total boards" value={stats.total} tone="teal" />
+              <StatPill icon={LayoutGrid} label="Active columns" value={stats.columns} tone="cyan" />
+              <StatPill icon={Calendar} label="Created this month" value={stats.thisMonth} tone="amber" />
+              <StatPill icon={Sparkles} label="Workspace" value={stats.total > 0 ? 'Active' : 'New'} tone="violet" />
             </div>
           </StaggerItem>
 
@@ -139,44 +149,36 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
               <motion.div
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-12 sm:p-16 text-center"
+                className="spotlight-card relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.025] p-12 text-center sm:p-16"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 via-transparent to-cyan-600/10 pointer-events-none" />
-                <div className="relative">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-violet-500/20 to-cyan-500/20 flex items-center justify-center ring-1 ring-white/10">
-                    <LayoutGrid size={36} className="text-violet-400" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-white">Belum ada board</h2>
-                  <p className="text-zinc-500 text-sm mt-2 max-w-md mx-auto leading-relaxed">
-                    Buat board pertama untuk mulai menambah task, mengatur prioritas, dan menyeret kartu antar kolom.
-                  </p>
-                  <Button
-                    className="mt-8"
-                    icon={<Sparkles size={16} />}
-                    onClick={() => setShowModal(true)}
-                  >
-                    Buat board pertama
-                  </Button>
-                </div>
+                <EmptyIllustration />
+                <h2 className="font-display text-2xl font-semibold text-white">Build your first operating board</h2>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-500">
+                  Start with one project, add the work that matters, and move cards as decisions become progress.
+                </p>
+                <Button className="mt-8" icon={<Sparkles size={16} />} onClick={() => setShowModal(true)}>
+                  Create first board
+                </Button>
               </motion.div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3">
                 {boards.map((board, i) => {
                   const cover = getBoardCover(board.cover_color)
                   return (
                     <motion.article
                       key={board.id}
                       initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05, duration: 0.4 }}
-                      whileHover={{ y: -4 }}
-                      className="group card-shine relative rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden cursor-pointer hover:border-white/15 hover:shadow-2xl hover:shadow-violet-500/10 transition-shadow"
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.25 }}
+                      transition={{ delay: i * 0.04, duration: 0.42 }}
+                      whileHover={{ y: -5 }}
+                      className="group card-shine spotlight-card relative overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.035] transition-shadow hover:border-white/15 hover:shadow-2xl hover:shadow-teal-500/15"
                       onClick={() => router.push(`/board/${board.id}`)}
                     >
-                      <div className={cn('h-24 bg-gradient-to-br opacity-90 group-hover:opacity-100 transition', cover.gradient)} />
-                      <div className="p-5">
+                      <div className={cn('h-24 bg-gradient-to-br opacity-90 transition group-hover:opacity-100', cover.gradient)} />
+                      <div className="relative p-5">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-semibold text-white text-lg truncate pr-2 group-hover:text-violet-100 transition-colors">
+                          <h3 className="truncate pr-2 text-lg font-semibold text-white transition-colors group-hover:text-teal-100">
                             {board.title}
                           </h3>
                           <button
@@ -185,26 +187,26 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
                               e.stopPropagation()
                               setDeleteTarget(board)
                             }}
-                            className="shrink-0 p-2 text-zinc-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                            aria-label="Hapus board"
+                            className="shrink-0 rounded-xl p-2 text-zinc-600 opacity-100 transition hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
+                            aria-label="Delete board"
                           >
                             <Trash2 size={15} />
                           </button>
                         </div>
-                        <p className="text-zinc-500 text-sm mt-2 line-clamp-2 min-h-[2.5rem]">
-                          {board.description || 'Tanpa deskripsi — klik untuk membuka board.'}
+                        <p className="mt-2 min-h-[2.5rem] line-clamp-2 text-sm text-zinc-500">
+                          {board.description || 'No description yet. Open the board to shape the workflow.'}
                         </p>
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.06]">
-                          <span className="text-[11px] text-zinc-600 flex items-center gap-1.5">
+                        <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-4">
+                          <span className="flex items-center gap-1.5 text-[11px] text-zinc-600">
                             <Calendar size={12} />
-                            {new Date(board.created_at).toLocaleDateString('id-ID', {
+                            {new Date(board.created_at).toLocaleDateString('en-US', {
                               day: 'numeric',
                               month: 'short',
                               year: 'numeric',
                             })}
                           </span>
-                          <span className="text-[11px] font-medium text-violet-400/90 group-hover:text-violet-300">
-                            Buka board →
+                          <span className="text-[11px] font-medium text-teal-400/90 group-hover:text-teal-300">
+                            Open board
                           </span>
                         </div>
                       </div>
@@ -220,51 +222,32 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title="Board baru"
-        description="Setiap board mendapat 3 kolom: To Do, In Progress, Done."
+        title="New board"
+        description="Every board starts with To Do, In Progress, and Done columns."
       >
-        <form onSubmit={handleCreateBoard} className="space-y-4 -mt-2">
+        <form onSubmit={handleCreateBoard} className="-mt-2 space-y-4">
           <Input
-            label="Judul *"
+            label="Title *"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            placeholder="Mis. Peluncuran produk"
+            placeholder="Product launch"
             required
             autoFocus
           />
           <Textarea
-            label="Deskripsi"
+            label="Description"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Tujuan atau scope board ini..."
+            placeholder="What outcome should this board drive?"
             rows={2}
           />
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Warna cover</label>
-            <div className="flex flex-wrap gap-2">
-              {BOARD_COVERS.map(c => (
-                <motion.button
-                  key={c.id}
-                  type="button"
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCoverId(c.id)}
-                  className={cn(
-                    'w-10 h-10 rounded-xl transition ring-2 ring-offset-2 ring-offset-[#0c0c12]',
-                    c.swatch,
-                    coverId === c.id ? 'ring-white scale-105' : 'ring-transparent opacity-60 hover:opacity-100',
-                  )}
-                  title={c.label}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1">
+
+          <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row">
             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>
-              Batal
+              Cancel
             </Button>
             <Button type="submit" className="flex-1" loading={loading}>
-              Buat board
+              Create board
             </Button>
           </div>
         </form>
@@ -272,10 +255,10 @@ export default function DashboardClient({ boards: initialBoards, user, userId }:
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Hapus board?"
-        description={`Board «${deleteTarget?.title}» dan semua task di dalamnya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.`}
-        confirmLabel="Ya, hapus"
-        cancelLabel="Batal"
+        title="Delete board?"
+        description={`"${deleteTarget?.title}" and every task inside it will be permanently removed.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
         variant="danger"
         loading={deleting}
         onConfirm={confirmDeleteBoard}

@@ -40,7 +40,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         'group card-shine rounded-xl border p-3.5 transition-all',
         isDragging
           ? 'opacity-40 scale-[0.98] border-violet-500/40 bg-violet-500/5'
-          : 'border-white/[0.08] bg-white/[0.04] hover:border-white/15 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-violet-500/5',
+          : 'border-white/[0.08] bg-white/[0.04] hover:border-white/15 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-violet-500/5 hover:-translate-y-0.5',
         dueTomorrow && !overdue && 'ring-1 ring-cyan-500/30',
       )}
     >
@@ -76,7 +76,7 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
                 )}
               >
                 {dueTomorrow && !overdue ? <Clock size={9} /> : <Calendar size={9} />}
-                {dueTomorrow && !overdue ? 'Besok' : formatDueDate(task.due_date)}
+                {dueTomorrow && !overdue ? 'Tomorrow' : formatDueDate(task.due_date)}
               </span>
             )}
           </div>

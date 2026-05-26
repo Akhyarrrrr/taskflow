@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #06060a;
-  --foreground: #fafafa;
-  --accent: #8b5cf6;
-  --accent-2: #06b6d4;
+  --background: #05060a;
+  --foreground: #f8fafc;
+  --accent: #0D9488;
+  --accent-2: #14B8A6;
+  --accent-3: #F97316;
   --surface: rgba(255, 255, 255, 0.04);
   --border: rgba(255, 255, 255, 0.08);
 }
@@ -12,25 +13,41 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-jakarta);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+button,
+a,
+[role='button'] {
+  cursor: pointer;
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.35);
+  background: rgba(13, 148, 136, 0.32);
   color: white;
 }
 
 .bg-app-gradient {
   position: relative;
   min-height: 100vh;
-  background-color: #06060a;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(13, 148, 136, 0.12), transparent 32rem),
+    radial-gradient(circle at 80% 0%, rgba(20, 184, 166, 0.1), transparent 30rem),
+    #05060a;
 }
 
-/* Shine sweep on hover cards (21st-style) */
 .card-shine {
   position: relative;
   overflow: hidden;
@@ -43,12 +60,12 @@ body {
   background: linear-gradient(
     105deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.06) 45%,
-    rgba(255, 255, 255, 0.02) 55%,
-    transparent 60%
+    rgba(255, 255, 255, 0.07) 47%,
+    rgba(255, 255, 255, 0.02) 54%,
+    transparent 62%
   );
   transform: translateX(-100%);
-  transition: transform 0.6s ease;
+  transition: transform 0.7s ease;
   pointer-events: none;
 }
 
@@ -56,12 +73,32 @@ body {
   transform: translateX(100%);
 }
 
-/* Kanban scroll */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background:
+    radial-gradient(circle at var(--x, 50%) var(--y, 0%), rgba(255, 255, 255, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(13, 148, 136, 0.11), transparent 34%, rgba(20, 184, 166, 0.1));
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
 .kanban-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.4) transparent;
+  scrollbar-color: rgba(13, 148, 136, 0.4) transparent;
 }
 
 .kanban-scroll > * {
@@ -73,13 +110,12 @@ body {
 }
 
 .kanban-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.4));
+  background: linear-gradient(90deg, rgba(13, 148, 136, 0.45), rgba(20, 184, 166, 0.38));
   border-radius: 9999px;
 }
 
 .custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.35) transparent;
+  scrollbar-color: rgba(13, 148, 136, 0.35) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -87,19 +123,17 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.35);
+  background: rgba(13, 148, 136, 0.35);
   border-radius: 9999px;
 }
 
-/* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #67e8f9 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #99f6e4 48%, #5eead4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Skeleton shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -114,4 +148,15 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

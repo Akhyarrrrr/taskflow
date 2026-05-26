@@ -1,6 +1,7 @@
 // app/page.tsx
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import LandingClient from './LandingClient'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -8,7 +9,7 @@ export default async function Home() {
 
   if (user) {
     redirect('/dashboard')
-  } else {
-    redirect('/login')
   }
+
+  return <LandingClient />
 }

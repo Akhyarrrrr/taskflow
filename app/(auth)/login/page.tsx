@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Mail, LockKeyhole } from 'lucide-react'
 import { AuthShell } from '@/components/auth/auth-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
@@ -23,25 +25,25 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      notify.error('Gagal masuk', error.message)
+      notify.error('Unable to sign in', error.message)
       setLoading(false)
       return
     }
 
-    notify.success('Selamat datang kembali!', 'Mengalihkan ke dashboard...')
+    notify.success('Welcome back', 'Opening your workspace...')
     router.push('/dashboard')
     router.refresh()
   }
 
   return (
     <AuthShell
-      title="Masuk ke Taskflow"
-      subtitle="Lanjutkan mengelola board dan task kamu"
+      title="Welcome back"
+      subtitle="Sign in to pick up the boards, deadlines, and decisions waiting for your team."
       footer={
         <>
-          Belum punya akun?{' '}
-          <Link href="/register" className="text-violet-400 hover:text-violet-300 font-medium">
-            Daftar gratis
+          New to TaskFlow?{' '}
+          <Link href="/register" className="font-medium text-teal-400 hover:text-teal-300">
+            Create a free account
           </Link>
         </>
       }
@@ -52,21 +54,34 @@ export default function LoginPage() {
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          placeholder="nama@email.com"
+          placeholder="you@company.com"
           required
           autoComplete="email"
+          icon={<Mail size={16} />}
         />
         <Input
           label="Password"
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          placeholder="••••••••"
+          placeholder="Enter your password"
           required
           autoComplete="current-password"
+          icon={<LockKeyhole size={16} />}
         />
+        <div className="flex items-center justify-between gap-4 text-sm">
+          <label className="flex items-center gap-2 text-zinc-400">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={e => setRemember(e.target.checked)}
+              className="h-4 w-4 rounded border-white/15 bg-white/[0.04] accent-teal-400"
+            />
+            Remember me
+          </label>
+        </div>
         <Button type="submit" className="w-full" size="lg" loading={loading}>
-          Masuk
+          Sign in
         </Button>
       </form>
     </AuthShell>
